@@ -1,0 +1,41 @@
+{
+  "name": "click-nav",
+  "version": "0.1.0",
+  "description": "Accessible click based navigation",
+  "scripts": {
+    "dev": "npx rollup -c -w",
+    "build": "npx rollup -c"
+  },
+  "main": "dist/click-nav.cjs.js",
+  "module": "dist/click-nav.esm.js",
+  "browser": "dist/click-nav.js",
+  "unpkg": "dist/click-nav.js",
+  "style": "dist/click-nav.css",
+  "homepage": "",
+  "author": {
+    "name": "Nick Goodrum",
+    "url": "https://github.com/ngoodrum"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@babel/core": "^7.8.3",
+    "@babel/plugin-proposal-class-properties": "^7.8.3",
+    "@babel/plugin-proposal-optional-chaining": "^7.8.3",
+    "@babel/plugin-transform-typescript": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
+    "@rollup/plugin-commonjs": "^11.0.2",
+    "@rollup/plugin-node-resolve": "^7.1.1",
+    "core-js": "^3.6.4",
+    "custom-event-polyfill": "^1.0.7",
+    "element-closest-polyfill": "^1.0.0",
+    "np": "^5.2.1",
+    "rimraf": "^3.0.2",
+    "rollup": "^1.31.0",
+    "rollup-plugin-babel": "^4.3.3",
+    "rollup-plugin-livereload": "^1.0.4",
+    "rollup-plugin-postcss": "^2.0.6",
+    "rollup-plugin-serve": "^1.0.1",
+    "rollup-plugin-terser": "^5.2.0"
+  },
+  "dependencies": {}
+}

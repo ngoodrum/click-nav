@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="click-nav.css">
+</head>
+
+<body>
+    <header>
+        <nav class="site-nav" aria-label="main navigation">
+            <ul class="cm-nav">
+                <li class="cm-nav__item">
+                    <a href="#" class="cm-nav__link">link 1</a>
+                    <ul class="cm-nav__sub-menu">
+                        <li class="cm-nav__item">
+                            <a href="#" class="cm-nav__link">Sub Link 1 - 1</a>
+                        </li>
+                        <li class="cm-nav__item">
+                            <a href="#" class="cm-nav__link">Sub Link 1 - 2</a>
+                        </li>
+                        <li class="cm-nav__item">
+                            <a href="#" class="cm-nav__link">Sub Link 1 - 3</a>
+                        </li>
+                        <li class="cm-nav__item">
+                            <a href="#" class="cm-nav__link">Sub Link 1 - 4</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <script src="click-nav.js"></script>
+    <script>
+        window.addEventListener('load', function(){
+            var nav = document.querySelector('.site-nav');
+            var cm = new ClickNav(nav, {});
+        });
+    </script>
+</body>
+</html>
