@@ -23,7 +23,7 @@ export default class ClickNav {
         };
 
         this.config = { ...defaults, ...params };
-        this.element = element;
+        this.nav = element;
         console.log(this.config);
 
         this.handleExpander = this.handleExpander.bind(this);
@@ -34,16 +34,16 @@ export default class ClickNav {
 
     init(){
         const _ = this;
-        const availableLinks = _.element.querySelectorAll(this.config.linkSelector);
+        const availableLinks = _.nav.querySelectorAll(this.config.linkSelector);
 
+        _.nav.dispatchEvent(new CustomEvent("init", { clickNav: _ } ));
 
-        _.element.dispatchEvent(new CustomEvent("init", { clickNav: _ } ));
+        _.nav.setAttribute('data-level', 0);
 
         availableLinks.forEach(link => {
             const siblings = _.getSiblings(link);
 
             siblings.forEach(elem => {
-                // console.log(elem, elem.nextElementSibling, elem.nextElementSibling && elem.nextElementSibling.nodeType);
                 if ( elem instanceof HTMLDivElement || elem instanceof HTMLOListElement || elem instanceof HTMLUListElement) {
                     let panelID = elem.getAttribute('id');
 
@@ -54,32 +54,36 @@ export default class ClickNav {
                     if ( ! panelID ) {
                         panelID = generateID('cm-menu-panel-');
                         elem.setAttribute('id', panelID);
-                    } 
+                    }
 
-                    link.setAttribute('data-has-sub', true);
-                    
                     const button = _.createExpander(panelID, link, _.config.expanderClass);
+                    
+                    button.addEventListener('click', _.handleExpander);
+                    link.setAttribute('hidden', '');
+                    elem.setAttribute('data-level', _.determineLevel(elem));
 
                     insertAfter(button, link);
-
-                    button.addEventListener('click', _.handleExpander);
 
                     return;
                 }
             });
-
         });
     }
 
     destroy() {
         const _ = this;
-        const expanders = _.element.querySelectorAll('[aria-controls]');
+        const expanders = _.nav.querySelectorAll('[aria-controls]');
         
-        _.element.dispatchEvent(new CustomEvent("destroy", { clickNav: _ } ));
+        _.nav.dispatchEvent(new CustomEvent("destroy", { clickNav: _ } ));
 
         expanders.forEach(elem => {
             elem.removeEventListener('click', _.handleExpander);
-        });        
+        });
+    }
+
+    determineLevel(elem) {
+        const foundLevel = elem.closest('[data-level]');
+        return foundLevel ? parseInt(foundLevel.dataset.level, 10) + 1 : 1;
     }
 
     createExpander(panelID, link, expanderClass) {
@@ -100,34 +104,36 @@ export default class ClickNav {
     toggleExpander(button) {
         const _ = this;
         const panel = document.getElementById(button.getAttribute('aria-controls'));
-        //const wrapper = button.closest('');
+        const wrapper = button.closest('data-level');
 
         if (button.getAttribute('aria-expanded') === 'true') {
 
-            _.element.dispatchEvent(new CustomEvent("before.expander.close", { clickNav: _ } ));
+            _.nav.dispatchEvent(new CustomEvent("before.expander.close", { clickNav: _ } ));
 
             panel.classList.remove(_.config.panelActiveClass);
 
             setTimeout(() => {
                 button.setAttribute('aria-expanded', false);
 
-                _.element.dispatchEvent(new CustomEvent("after.expander.close", { clickNav: _ } ));
+                _.nav.dispatchEvent(new CustomEvent("after.expander.close", { clickNav: _ } ));
             }, _.config.animationSpeed)
 
         } else {
-            _.element.dispatchEvent(new CustomEvent("before.expander.open", { clickNav: _ } ));
+            _.nav.dispatchEvent(new CustomEvent("before.expander.open", { clickNav: _ } ));
+
             button.setAttribute('aria-expanded', true);
+
+            _.resetExpanders(button.closest('[data-level]'), button);
 
             setTimeout(() => {
                 panel.classList.add(_.config.panelActiveClass);
 
                 if ( _.config.isAutoClose ) { // Only add if (default) menus set to auto close
-                    //.on("touchend click focusin", _.menuHandler);
-                    document.addEventListener('click', _.handleMenu)
+                    document.addEventListener('click', _.handleMenu);
                 }
 
                 setTimeout(() => {
-                    _.element.dispatchEvent(new CustomEvent("after.expander.open", { clickNav: _ } ));
+                    _.nav.dispatchEvent(new CustomEvent("after.expander.open", { clickNav: _ } ));
                 }, _.config.animationSpeed);
 
             }, 10);
@@ -136,8 +142,7 @@ export default class ClickNav {
 
     handleMenu(e) {
         const _ = this;
-        console.log('handle menu', _.element.contains(e.target), e.target === _.element, e.target);
-        if ( ! _.element.contains(e.target) && e.target !== _.element ) {
+        if ( ! _.nav.contains(e.target) && e.target !== _.nav ) {
             //Make sure not to leave any tabindex=0 on submenu links by making sure the toggle knows we are leaving the menu
             _.leavingMenu = true;
 
@@ -159,13 +164,18 @@ export default class ClickNav {
 
         return children.filter(child => child !== elem);
     }
-    
-    resetExpanders() {
+
+    resetExpanders(navTree, navItem) {
         const _ = this;
-        const activeItems = _.element.querySelectorAll('[aria-expanded=true]');
-        console.log('resetting');
+        const activeItems = navTree ? 
+                            navTree.querySelectorAll('[aria-expanded="true"]') : 
+                            _.nav.querySelectorAll('[aria-expanded="true"]');
+        //If there is a navTree supplied only check children inside of the level otherwise close all menus
         activeItems.forEach(button => {
-            _.toggleExpander(button);
+            //Make sure not to call on the button that might be triggering this on open
+            if ( button !== navItem ) {
+                _.toggleExpander(button);
+            }
         });
     }
 }
