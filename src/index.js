@@ -5,7 +5,7 @@ import '../node_modules/element-closest-polyfill';
 import '../node_modules/custom-event-polyfill';
 
 export default class ClickNav {
-    constructor(element, ...params) {
+    constructor(element, params = {}) {
         const defaults = {
             menutype : "dropdown",
             animationSpeed : 400,
@@ -27,6 +27,7 @@ export default class ClickNav {
         console.log(this.config);
 
         this.handleExpander = this.handleExpander.bind(this);
+        this.handleKeys = this.handleKeys.bind(this);
         this.handleMenu = this.handleMenu.bind(this);
 
         this._init();
@@ -39,6 +40,7 @@ export default class ClickNav {
         _.nav.dispatchEvent(new CustomEvent("init", { clickNav: _ } ));
 
         _.nav.setAttribute('data-level', 0);
+        _.nav.addEventListener('keydown', _.handleKeys, { passive: true });
 
         availableLinks.forEach(link => {
             const siblings = _.getSiblings(link);
@@ -57,8 +59,8 @@ export default class ClickNav {
                     }
 
                     const button = _.createExpander(panelID, link, _.config.expanderClass);
-                    
-                    button.addEventListener('click', _.handleExpander);
+
+                    button.addEventListener('click', _.handleExpander, { passive:true });
                     sibling.setAttribute('data-level', _.determineLevel(sibling));
 
                     if (! _.config.separateExpanders ) {
@@ -92,7 +94,8 @@ export default class ClickNav {
         const expanders = _.nav.querySelectorAll('[aria-controls]');
         
         _.nav.dispatchEvent(new CustomEvent("destroy", { clickNav: _ } ));
-
+        
+        _.nav.removeEventListener('keydown', _.handleKeys);
         expanders.forEach(elem => {
             elem.removeEventListener('click', _.handleExpander);
         });
@@ -105,7 +108,23 @@ export default class ClickNav {
 
     handleExpander(e) {
         const _ = this;
+
+        //TODO - Determine if should just be toggleExpander since handleExpander currently adds no value
         _.toggleExpander(e.currentTarget);
+    }
+
+    handleKeys(e) {
+        const _ = this,
+              keyPress = e.key,
+              openedToggles = _.nav.querySelectorAll('[data-current]'),
+              lastToggle = openedToggles[openedToggles.length - 1];
+
+        if (keyPress === "Escape") {
+            if (lastToggle) {
+                _.toggleExpander(lastToggle);
+                lastToggle.focus();
+            }
+        }
     }
 
     handleMenu(e) {
@@ -144,7 +163,6 @@ export default class ClickNav {
         });
     }
 
-
     toggleExpander(button) {
         const _ = this;
         const panel = document.getElementById(button.getAttribute('aria-controls'));
@@ -154,6 +172,7 @@ export default class ClickNav {
 
             _.nav.dispatchEvent(new CustomEvent("before.expander.close", { clickNav: _ } ));
 
+            button.removeAttribute('data-current');
             panel.classList.remove(_.config.panelActiveClass);
 
             setTimeout(() => {
@@ -166,6 +185,7 @@ export default class ClickNav {
             _.nav.dispatchEvent(new CustomEvent("before.expander.open", { clickNav: _ } ));
 
             button.setAttribute('aria-expanded', true);
+            button.setAttribute('data-current', true);
 
             _.resetExpanders(button.closest('[data-level]'), button);
 
